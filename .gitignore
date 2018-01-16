@@ -1,0 +1,14 @@
+# IntelliJ project files
+.idea
+*.iml
+out
+gen
+
+### Terraform template
+*.tfstate
+*.tfstate.*.backup
+*.tfstate.backup
+.terraform/
+*.tfvars
+remote-state-backend.tf*
+terraform/environment*.json

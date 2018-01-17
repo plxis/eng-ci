@@ -14,7 +14,7 @@ As with the other projects, this repository and contents within are presented as
 
 ## Example Usage
 
-Create a file named `vars` and provide values for non-default variables (to override default variables, refer to `terraform/variables.tf`):
+Create a `terraform/vars` file and provide values for non-default variables (to override default variables, refer to `terraform/variables.tf`):
 
 ```json
 context              = "example-stack"
@@ -39,4 +39,14 @@ oauth_cookie_secret              = "MY_COOKIE_SECRET"
 upsource_version              = "2017.2.2398"
 upsource_root_volume_size_gb  = 8
 upsource_ebs_volume_size_gb   = 2
+```
+
+NOTE: OAuth values should come from creating a google OAuth Client Account (via [Google Cloud Console](https://console.cloud.google.com)), and the `oauth_cookie_secret` should be a random string of characters to protect browser session cookies.
+
+Run Terraform to create the stack:
+
+```bash
+cd terraform
+terraform init
+terraform apply -var-file vars
 ```

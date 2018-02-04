@@ -1,4 +1,5 @@
 variable "context"                      { }
+variable "aws_profile"                  { }
 variable "aws_region"                   { }
 variable "foundry_state_bucket"         { }
 variable "foundry_state_key"            { }
@@ -21,3 +22,5 @@ variable "ivy_public_dns_name"          { }
 variable "repo_bucket_dns_name"         { }
 variable "upsource_private_dns_name"    { }
 variable "upsource_public_dns_name"     { }
+variable "toxic_private_dns_name"       { }
+variable "toxic_public_dns_name"        { }

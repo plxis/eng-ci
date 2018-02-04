@@ -1,4 +1,5 @@
 variable "context"                      { }
+variable "aws_profile"                  { }
 variable "aws_region"                   { }
 variable "foundry_state_bucket"         { }
 variable "foundry_state_key"            { }

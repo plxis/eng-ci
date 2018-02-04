@@ -4,11 +4,13 @@ data "terraform_remote_state" "foundry" {
     bucket = "${var.foundry_state_bucket}"
     key    = "${var.foundry_state_key}"
     region = "${var.aws_region}"
+    profile= "${var.aws_profile}"
   }
 }
 
 provider "aws" {
   region = "${var.aws_region}"
+  profile= "${var.aws_profile}"
 }
 
 resource "aws_alb" "proxy-lb" {
@@ -135,7 +137,6 @@ resource "aws_autoscaling_group" "proxy-asg" {
   launch_configuration = "${aws_launch_configuration.proxy-lc.name}"
   vpc_zone_identifier  = [ "${data.terraform_remote_state.foundry.private_subnets}" ]
   target_group_arns    = ["${aws_alb_target_group.proxy-tg.arn}"]
-  load_balancers       = [ "${aws_elb.proxy-internal-elb.id}" ]
   enabled_metrics      = [ "GroupMinSize","GroupMaxSize","GroupDesiredCapacity","GroupInServiceInstances","GroupPendingInstances","GroupStandbyInstances","GroupTerminatingInstances","GroupTotalInstances"]
 
   lifecycle {
@@ -196,7 +197,7 @@ resource "aws_security_group" "proxy-instance-sg" {
     from_port       = 22
     to_port         = 22
     protocol        = "tcp"
-    security_groups = [ "${data.terraform_remote_state.foundry.jump_host_sg}", "${aws_elb.proxy-internal-elb.source_security_group_id}" ]
+    security_groups = [ "${data.terraform_remote_state.foundry.jump_host_sg}" ]
   }
 
   # Allow outbound HTTP
@@ -248,6 +249,8 @@ data "template_file" "user-data-script" {
     repo_bucket_dns_name  = "${var.repo_bucket_dns_name}"
     upsource_private_dns_name  = "${var.upsource_private_dns_name}"
     upsource_public_dns_name   = "${var.upsource_public_dns_name}"
+    toxic_private_dns_name  = "${var.toxic_private_dns_name}"
+    toxic_public_dns_name   = "${var.toxic_public_dns_name}"
   }
 }
 
@@ -298,81 +301,6 @@ resource "aws_cloudwatch_log_group" "proxy" {
   tags {
     Name    = "${var.context}-proxy"
     Context = "${var.context}"
-  }
-}
-
-# An internal ELB for logging in (SSH) to a proxy server from within the network
-resource "aws_elb" "proxy-internal-elb" {
-  name            = "elb-${var.context}-proxy-internal"
-  subnets         = ["${data.terraform_remote_state.foundry.private_subnets}"]
-  security_groups = ["${aws_security_group.proxy-internal-elb-sg.id}"]
-  internal        = true
-  idle_timeout    = 330
-
-  listener {
-    instance_port     = 22
-    instance_protocol = "tcp"
-    lb_port           = 22
-    lb_protocol       = "tcp"
-  }
-
-  health_check {
-    healthy_threshold   = 2
-    unhealthy_threshold = 2
-    timeout             = 10
-    target              = "TCP:22"
-    interval            = 60
-  }
-
-  tags {
-    Name    = "elb-${var.context}-proxy-internal"
-    Context = "${var.context}"
-  }
-}
-
-resource "aws_security_group" "proxy-internal-elb-sg" {
-  name        = "${var.context}-proxy-internal-elb-sg"
-  description = "Proxy internal ELB security group"
-  vpc_id      = "${data.terraform_remote_state.foundry.vpc_id}"
-
-  tags {
-    Name    = "sg-${var.context}-proxy-internal-elb"
-    Context = "${var.context}"
-  }
-}
-
-data "aws_subnet" "internal_subnets" {
-  count = "${length(var.internal_subnet_ids)}"
-  id = "${element(var.internal_subnet_ids, count.index)}"
-}
-
-resource "aws_security_group_rule" "allow_ssh_from_internal_servers" {
-  type            = "ingress"
-  from_port       = 22
-  to_port         = 22
-  protocol        = "tcp"
-  security_group_id = "${aws_security_group.proxy-internal-elb-sg.id}"
-  cidr_blocks = ["${data.aws_subnet.internal_subnets.*.cidr_block}"]
-}
-
-resource "aws_security_group_rule" "allow_ssh_to_proxy_server" {
-  type            = "egress"
-  from_port       = 22
-  to_port         = 22
-  protocol        = "tcp"
-  security_group_id = "${aws_security_group.proxy-internal-elb-sg.id}"
-  source_security_group_id = "${aws_security_group.proxy-instance-sg.id}"
-}
-
-resource "aws_route53_record" "proxy-internal-internal-dns" {
-  zone_id   = "${data.terraform_remote_state.foundry.private_zone_id}"
-  name      = "proxy"
-  type      = "A"
-
-  alias {
-    name                   = "${aws_elb.proxy-internal-elb.dns_name}"
-    zone_id                = "${aws_elb.proxy-internal-elb.zone_id}"
-    evaluate_target_health = true
   }
 }
 

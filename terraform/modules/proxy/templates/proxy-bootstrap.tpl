@@ -257,6 +257,48 @@ http {
 
   server {
     listen                     80;
+    server_name                ${toxic_public_dns_name};
+    location /oauth2/ {
+      proxy_pass               http://127.0.0.1:4180;
+      proxy_set_header         Host \$host;
+      proxy_set_header         X-Real-IP \$remote_addr;
+      proxy_set_header         X-Scheme  \$scheme;
+      proxy_set_header         X-Auth-Request-Redirect \$request_uri;
+    }
+    location  /ws/ {
+      set \$upstream           http://${toxic_private_dns_name};
+      proxy_pass               \$upstream;
+      proxy_http_version       1.1;
+      proxy_set_header         Upgrade \$http_upgrade;
+      proxy_set_header         Connection \$connection_upgrade;
+      auth_request_set         \$user \$upstream_http_x_auth_request_user;
+      auth_request_set         \$email \$upstream_http_x_auth_request_email;
+      auth_request_set         \$auth_cookie \$upstream_http_set_cookie;
+      add_header               Set-Cookie \$auth_cookie;
+      proxy_set_header         X-User \$user;
+      proxy_set_header         X-Email \$email;
+      chunked_transfer_encoding on;
+      auth_request             /oauth2/auth;
+      error_page               401 = /oauth2/sign_in;
+    }
+    location  / {
+      set \$upstream           http://${toxic_private_dns_name};
+      proxy_pass               \$upstream;
+      proxy_redirect           http://${toxic_private_dns_name} https://${toxic_public_dns_name};
+      auth_request_set         \$user \$upstream_http_x_auth_request_user;
+      auth_request_set         \$email \$upstream_http_x_auth_request_email;
+      auth_request_set         \$auth_cookie \$upstream_http_set_cookie;
+      add_header               Set-Cookie \$auth_cookie;
+      proxy_set_header         X-User \$user;
+      proxy_set_header         X-Email \$email;
+      chunked_transfer_encoding on;
+      auth_request             /oauth2/auth;
+      error_page               401 = /oauth2/sign_in;
+    }
+  }
+
+  server {
+    listen                     80;
     server_name                ${upsource_public_dns_name};
     location /oauth2/ {
       proxy_pass               http://127.0.0.1:4180;

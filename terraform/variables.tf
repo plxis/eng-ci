@@ -1,7 +1,9 @@
 variable "context"                            { }
+variable "aws_profile"                        { }
 variable "aws_region"                         { }
 variable "foundry_state_bucket"               { }
 variable "foundry_state_key"                  { }
+variable "codecommit_state_key"               { }
 
 #---------------------------------------------------------
 # Proxy server configuration
@@ -36,3 +38,13 @@ variable "upsource_log_retention_days"        { default = 365 }
 variable "upsource_version"                   { }
 variable "upsource_root_volume_size_gb"       { }
 variable "upsource_ebs_volume_size_gb"        { }
+
+#---------------------------------------------------------
+# Toxic server configuration
+#---------------------------------------------------------
+variable "toxic_log_retention_days"           { default = 365 }
+variable "toxic_instance_type"                { default = "t2.micro"}
+variable "toxic_data_volume_size_gb"          { }
+variable "toxic_docker_bytes_per_inode"       { default="4096" }
+variable "toxic_docker_volume_size_gb"        { }
+variable "slack_token"                        { }

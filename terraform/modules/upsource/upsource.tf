@@ -4,11 +4,13 @@ data "terraform_remote_state" "foundry" {
     bucket = "${var.foundry_state_bucket}"
     key    = "${var.foundry_state_key}"
     region = "${var.aws_region}"
+    profile= "${var.aws_profile}"
   }
 }
 
 provider "aws" {
   region = "${var.aws_region}"
+  profile= "${var.aws_profile}"
 }
 
 resource "aws_route53_record" "upsource-public-dns" {

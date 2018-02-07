@@ -113,7 +113,7 @@ cat > /home/toxic/.ssh/config <<EOFVARS
 ServerAliveInterval 120
 UserKnownHostsFile=/dev/null
 StrictHostKeyChecking=no
-Host git.eng.stackct.com
+Host git.eng.mycompany.invalid
 User ${aws_codecommit_ssh_key_id}
 IdentityFile ~/.ssh/id_rsa
 EOFVARS
@@ -123,7 +123,7 @@ chmod 0700 /home/toxic/.ssh
 
 cat > /home/toxic/toxic-secure.properties <<EOFVARS
 configRepoType=toxic.job.GitRepository
-configRepoUrl=ssh://git.eng.stackct.com/v1/repos/toxicjob
+configRepoUrl=ssh://git.eng.mycompany.invalid/v1/repos/toxicjob
 smtpUsername=${smtp_username}
 smtpPassword=${smtp_password}
 slack.token=${slack_token}
